@@ -3,29 +3,35 @@ var _ = require('underscore');
 
 var dbConnection = function(){
 
-  db.connect();
+  //db.connect();
 
   var queries = [].slice.call(arguments, 0 , arguments.length -1);
 
   var callback = arguments[arguments.length -1];
 
-  var rows;
-
-  _.each(queries, function(q){
-
+console.log(queries);
+  _.each(queries, function(q, i){
+    console.log(q);
     db.query(q, function(err, r){
 
-      rows = r;
+      if (err){
+        callback(err);
+      }else if(i === queries.length -1){
+
+        callback(null, r);
+
+      }
+      console.log(err);
 
     });
 
   });
 
-  db.end(function(err){
+  // db.end(function(err){
 
-    callback(err, rows);
+  //   callback(err, rows);
 
-  });
+  // });
 };
 
 
@@ -33,7 +39,7 @@ module.exports = {
   messages: {
     get: function (callback) {
 
-      var queryArray = ['SELECT m.text, u.name, r.name, m.created_at',
+      var queryArray = ['SELECT m.text, u.name AS username, r.name AS roomname, m.created_at',
                         'FROM messages m',
                         'INNER JOIN rooms r',
                         'ON m.id_rooms = r.id',
@@ -46,9 +52,17 @@ module.exports = {
 
     post: function (message, callback) {
 
+      for (data in message){
+        if (message.hasOwnProperty(data)){
+
+          message[data] = message[data].replace(/'/g,"\\'");
+
+        }
+
+      }
+
 
       var query1 = 'INSERT IGNORE INTO rooms(name) VALUES (\'' + message.roomname + '\');';
-
       var query2 = 'INSERT IGNORE INTO users(name) VALUES (\'' + message.username + '\');';
 
       var query3 = ['INSERT INTO messages(text,created_at,id_rooms,id_users)',
