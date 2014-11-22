@@ -39,7 +39,7 @@ module.exports = {
   messages: {
     get: function (callback) {
 
-      var queryArray = ['SELECT m.text, u.name AS username, r.name AS roomname, m.created_at',
+      var queryArray = ['SELECT m.text, u.name AS username, r.name AS roomname, m.created_at, m.id as objectId',
                         'FROM messages m',
                         'INNER JOIN rooms r',
                         'ON m.id_rooms = r.id',
@@ -71,8 +71,16 @@ module.exports = {
                       '(SELECT id from users where name = \'' + message.username + '\')',
                     ');'].join(' ');
 
+      dbConnection(query3,function(err,r){
 
-      dbConnection(query1, query2, query3, callback);
+        if (err){
+          dbConnection(query1, query2, query3, callback);
+        } else {
+          callback(err,r);
+        }
+
+      });
+
 
     } // a function which can be used to insert a message into the database
   },
